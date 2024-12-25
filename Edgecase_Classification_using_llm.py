@@ -2,7 +2,7 @@
 import getpass
 import pandas as pd
 import os
-os.environ["GROQ_API_KEY"] = "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"
+os.environ["GROQ_API_KEY"] = ""
 from langchain_groq import ChatGroq
 llm = ChatGroq(model="llama3-8b-8192")
 
