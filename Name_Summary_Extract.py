@@ -1,9 +1,7 @@
 import getpass
 import os
 from langchain_groq import ChatGroq
-from dotenv import load_dotenv
-load_dotenv()
-os.environ["GROQ_API_KEY"] = "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"
+os.environ["GROQ_API_KEY"] = ""
 llm = ChatGroq(model="llama3-8b-8192")
 
 from langchain_core.prompts import ChatPromptTemplate, FewShotChatMessagePromptTemplate
