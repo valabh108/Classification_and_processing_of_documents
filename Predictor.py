@@ -9,7 +9,7 @@ from datasets import Features, Sequence, ClassLabel, Value, Array2D
 import numpy as np
 from datasets import Dataset
 from pdf2image import convert_from_path
-from Classification_using_llm import predict_llms
+from Edgecase_Classification_using_llm import predict_llms
 classes = ['invoice', 'resume', 'passport', 'Tax_Statement', 'balance_sheet', 'Income_Statement', 'Driving_License', ]
 
 
