@@ -54,7 +54,17 @@ def name_extract(text, label):
     chain = final_prompt | llm
 
     response = chain.invoke({"input": f"label: {label}, text: {text}"}).content
-    return ast.literal_eval(response)["Name"], ast.literal_eval(response)["Address"]
+        try:
+        name = ast.literal_eval(response)["Name"]
+    except KeyError:
+        name = 'None'
+
+    try:
+        address = ast.literal_eval(response)["Address"]
+    except KeyError:
+        address = 'None'
+
+    return name, address
 
 def summary_extract(label, text):
 
