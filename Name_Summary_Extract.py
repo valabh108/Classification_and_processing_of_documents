@@ -68,6 +68,6 @@ def name_extract(text, label):
 
 def summary_extract(label, text):
 
-    response = llm.invoke(f"Give summary in 2 lines: Document type: {label}, content: {text}. Only return the summary, don't ass anything like 'here is a summary'")
+    response = llm.invoke(f"Give summary in 2 lines: Document type: {label}, Summary: {text}. Provide a concise overview capturing the document's main purpose, key details, and significant insights, tailored to the specific document type for clarity and relevance. Only return the summary, don't add anything like 'here is a summary'")
     return response.content
 
