@@ -2,10 +2,7 @@
 This the official submission of the team 'Technarx' for the PS1 of the Appian AI Application Challenge 2025.
 
 This is the pipeline flow:-
-
-
-<img width="899" alt="Screenshot 2024-12-26 at 12 37 44 AM" src="https://github.com/user-attachments/assets/6c05df67-e7e3-4250-900e-acfda7551e31" />
-
+<img width="985" alt="Screenshot 2025-01-06 at 3 12 37 PM" src="https://github.com/user-attachments/assets/435cdde8-3f51-4be6-8ba9-ce828ab04ddf" />
 We have used a fine tuned LayoutLM classification model, which based on a BERT model but further adds a 2d positional embedding. We have finetuned the model on a custon made data set (169 scanned pdf documents) which were of the following classes:- 'invoice', 'resume', 'passport', 'Tax_Statement', 'balance_sheet', 'Income_Statement', 'Driving_License'. 
 
 We address edge cases where a document doesn't fit predefined labels by using an LLM to assign a label based on its text. A human-in-the-loop system verifies and adjusts the label if the model's confidence is below 95%, ensuring accuracy.
