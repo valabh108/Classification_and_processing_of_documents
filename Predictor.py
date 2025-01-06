@@ -9,7 +9,7 @@ from datasets import Features, Sequence, ClassLabel, Value, Array2D
 import numpy as np
 from datasets import Dataset
 from pdf2image import convert_from_path
-from Edgecase_Classification_using_llm import predict_llms
+from Edgecase_Classification import predict_edgecase
 classes = ['invoice', 'resume', 'passport', 'Tax_Statement', 'balance_sheet', 'Income_Statement', 'Driving_License', ]
 
 
@@ -134,31 +134,44 @@ def predict(test_data):
 
         # forward pass
         outputs = model(input_ids=input_ids, bbox=bbox, attention_mask=attention_mask,
-                        token_type_ids=token_type_ids)
+                        token_type_ids=token_type_ids, output_hidden_states=True)
 
         classification_logits = outputs.logits
         classification_results = torch.softmax(classification_logits, dim=1).tolist()[0]
         # for i in range(len(classes)):
         #     print(f"{classes[i]}: {int(round(classification_results[i] * 100))}%")
+
         res = []
         for i in range(len(classes)):
             res.append(int(round(classification_results[i] * 100)))
         if any(value > 90 for value in res):
             prediction = (outputs.logits.argmax(-1).squeeze().tolist())
-            return text, classes[prediction], human_needed
+            return text, classes[prediction], human_needed, None
 
         else:
-            prediction = predict_llms(text)
+            hidden_states = outputs.hidden_states
+            last_hidden_state = hidden_states[-1]
+            embedding = last_hidden_state.cpu().detach().numpy()
+            embedding = embedding.reshape(1,-1)
+            embedding = torch.tensor(embedding)
+            embedding = embedding.mean(dim=1)
+            prediction, new_embedding = predict_edgecase(text, embedding)
             human_needed = True
-            return text, prediction, human_needed
-
+            return text, prediction, human_needed, new_embedding
         # print(test_batch['label'])
 
 
 
-# file_path = './IMG_6008.pdf'
-# data = {'file_path': [file_path]}
-# df = pd.DataFrame(data)
-# text, l = predict(df)
-# print(l)
-# print(text)
+
+# #file_path = './uploaded_files/IMG_6007.pdf'
+# file_path1= './uploaded_files/Driving_License10.pdf'
+# #data = {'file_path': [file_path]}
+# #df = pd.DataFrame(data)
+# data1 = {'file_path': [file_path1]}
+# df1 = pd.DataFrame(data1)
+# # text, l, a, embed = predict(df)
+# text1, l1, a1, embed1 = predict(df1)
+# # from sklearn.metrics.pairwise import cosine_similarity
+# # similarity = cosine_similarity([embed], [embed1])[0][0]
+# # print(similarity)
+# print (text1, l1, a1, embed1)
