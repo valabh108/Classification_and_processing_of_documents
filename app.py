@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import sqlite3
 from Predictor import predict
-from Predictor import classes
+#from Predictor import classes
 import pandas as pd
 from Name_Summary_Extract import name_extract, summary_extract
 
@@ -11,23 +11,8 @@ save_dir = "./uploaded_files"
 os.makedirs(save_dir, exist_ok=True)
 
 # Connect to the SQLite database
-conn = sqlite3.connect("./uploaded_pdf_database1.db")
+conn = sqlite3.connect("./uploaded_pdf_database_new.db", check_same_thread=False)
 cursor = conn.cursor()
-
-# Create a table for storing metadata (if it doesn't exist)
-cursor.execute('''
-    CREATE TABLE IF NOT EXISTS pdf_metadata (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        filename UNIQUE,
-        filepath UNIQUE,
-        classification_label TEXT,
-        name TEXT,
-        address TEXT,
-        summary TEXT,
-        upload_timestamp TEXT
-    )
-''')
-conn.commit()
 
 # Page Title
 st.title("Appian Credit Union")
@@ -67,7 +52,7 @@ with col2:
         st.write(f"Search Results by {search_type.capitalize()}:")
         if results:
             # Convert the results into a pandas DataFrame for better visualization
-            df_results = pd.DataFrame(results, columns=["id", "filename", "filepath", "classification Label", "name", "address", "summary", "Upload Timestamp"])
+            df_results = pd.DataFrame(results, columns=["id", "filename", "filepath", "classification Label", "name", "address", "summary", "Upload Timestamp","edge_case"])
             st.dataframe(df_results, use_container_width=True)
         else:
             st.write("No files found.")
@@ -91,7 +76,7 @@ with col2:
         all_data = st.session_state["database_data"]
         if all_data:
             # Convert the data to a DataFrame for display
-            df_all = pd.DataFrame(all_data, columns=["id", "filename", "filepath", "classification Label", "name", "address", "summary", "Upload Timestamp"])
+            df_all = pd.DataFrame(all_data, columns=["id", "filename", "filepath", "classification Label", "name", "address", "summary", "Upload Timestamp", "edge case"])
             st.write("### Complete Database")
             st.dataframe(df_all, use_container_width=True, height=500)
         else:
@@ -112,7 +97,7 @@ with col1:
             # Create the DataFrame with a proper structure
             data = {'file_path': [file_path]}  # Wrap file_path in a list to match DataFrame format
             df = pd.DataFrame(data)
-            text, label, human_needed = predict(df)
+            text, label, human_needed, embedding_store = predict(df)
             name, address = name_extract(text, label)
             summary = summary_extract(label, text)
             # Use session state to control popup visibility
@@ -129,28 +114,36 @@ with col1:
                 )
                 if st.button(f"Confirm {uploaded_file.name}"):
                     label = new_label
+                    st.write(f"Updated label for {uploaded_file.name}: {label}")  # Debugging
+
+                    # Check if file already exists in the database
                     cursor.execute("SELECT * FROM pdf_metadata WHERE filepath = ?", (file_path,))
                     if cursor.fetchone():
                         st.warning(f"The file '{uploaded_file.name}' is already uploaded.")
                     else:
                         # Insert the metadata into the database
                         cursor.execute('''
-                            INSERT INTO pdf_metadata (filename, filepath, classification_label, name, address, summary, upload_timestamp)
-                            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                        ''', (uploaded_file.name, file_path, label, name, address, summary))
+                                                INSERT INTO flagged_pdf_metadata (filename, filepath, classification_label, name, address, summary, upload_timestamp, embedding, llm_invoked)
+                                                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+                                            ''', (uploaded_file.name, file_path, label, name, address, summary,embedding_store, True ))
+                        cursor.execute('''
+                                INSERT INTO pdf_metadata (filename, filepath, classification_label, name, address, summary, upload_timestamp, llm_invoked)
+                                VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                            ''', (uploaded_file.name, file_path, label, name, address, summary, True))
                         conn.commit()
-                    st.session_state[popup_key] = False
-                    st.success(f"File {uploaded_file.name} saved with label: {label}")
+                        st.session_state[popup_key] = False
+                        st.success(f"File {uploaded_file.name} saved with label: {label}")
             else:
+                # Handle files that don't need human intervention
                 cursor.execute("SELECT * FROM pdf_metadata WHERE filepath = ?", (file_path,))
                 if cursor.fetchone():
                     st.warning(f"The file '{uploaded_file.name}' is already uploaded.")
                 else:
                     # Insert the metadata into the database
                     cursor.execute('''
-                        INSERT INTO pdf_metadata (filename, filepath, classification_label, name, address, summary, upload_timestamp)
-                        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                    ''', (uploaded_file.name, file_path, label, name, address, summary))
+                                        INSERT INTO pdf_metadata (filename, filepath, classification_label, name, address, summary, upload_timestamp, llm_invoked)
+                                        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                                    ''', (uploaded_file.name, file_path, label, name, address, summary, False))
                     conn.commit()
 
             st.write(f"File saved to: {file_path}")
