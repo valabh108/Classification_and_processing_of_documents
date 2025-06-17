@@ -18,6 +18,6 @@ Run the app.py to launch the app on the browser.
 This the interface:
 <img width="884" alt="Screenshot 2024-12-26 at 1 12 52 AM" src="https://github.com/user-attachments/assets/316dea8d-d9d0-432f-a01b-497a48fcab67" />
 
-Make sure u put valid file faths and api keys wherever needed.
+Make sure u put valid file paths and api keys wherever needed.
 
 download the needed requirements need in the requirements.txt.
